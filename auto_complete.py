@@ -17,7 +17,7 @@ class AutoCompleteData:
         return self.completed_sentence
 
     def set_score(self, sub_score):
-        self.score -= sub_score
+        self.score = sub_score
 
     def get_source_text(self):
         return self.source_text
@@ -35,9 +35,7 @@ def read_data(filename):
     for sentence in data_sentences:
     
         if sentence:
-            first_word = sentence.split()[0]         
-            first_word = sentence.split()[0]         
-            first_word = sentence.split()[0]         
+            first_word = sentence.split()[0]             
 
             for i in range(len(first_word)):     
                 for j in range(i + 1, len(first_word) + 1):        
@@ -47,46 +45,55 @@ def read_data(filename):
         offset += 1
       
 
-#   changed_prefix = []
+def change_prefix(prefix):
 
-#     for i in range(len(prefix)):
-#         for ch in range(ord('a'), ord('z')+1):
-#             string_to_search = data.get(prefix.replace(prefix[i], ch, 1))
-#             if str:
-#                 strdef change_prefix(prefix):
-#   ing_to_search.set_score(2+(1 if i > 3 else 5 - i))
-#                 changed_prefix.append(string_to_search)
-#     return changed_prefix
+    changed_prefix = set()
 
-# def erase_prefix(prefix):
-#     erased_prefix = []
+    for i in range(len(prefix)):
+        for ch in range(ord('a'), ord('z')+1):
+            strings_to_search = data.get(prefix.replace(prefix[i], chr(ch), 1))
 
-#     for i in range(len(prefix)):
-#         strings_to_search = [list_data_sentences[str] for str in data.get(prefix.replace(prefix[i], "", 1))]
-#         if string_to_search:
-#             for str in strings_to_search:
-#                 string_to_search.set_score(2+(2 if i > 3 else 10 - 2*i)),
-#                 erased_prefix.append(string_to_search)
-#     return erased_prefix
-
-# def add_prefix(prefix):
-#     added_prefix = []
-
-#     for i in range(len(prefix)):
-#         for ch in range(ord('a'), ord('z')+1):
-#             string_to_search = data.get(prefix[:i+1] + ch + prefix[i+1:])
-#             if str:
-#                 string_to_search.set_score(2+(1 if i > 3 else 5 - i))
-#                 added_prefix.append(string_to_search)
-#     return add_prefix
+            if strings_to_search:
+                for str in strings_to_search:
+                    changed = list_data_sentences[str]
+                    changed.set_score(2*(len(prefix) -1) - (1 if i > 3 else 5 - i))
+                    changed_prefix.add(changed)
+    return changed_prefix
 
 
-# def complete_prefix(prefix):
-#     completed_prefix = []
-#     # completed_prefix = change_prefix(prefix)
-#     completed_prefix += erase_prefix(prefix)
-#     # completed_prefix += add_prefix(prefix)
-#     return completed_prefix
+def erase_prefix(prefix):
+    erased_prefix = set()
+
+    for i in range(len(prefix)):
+        strings_to_search = data.get(prefix.replace(prefix[i], "", 1))
+        if strings_to_search:
+            for str in strings_to_search:
+                erased = list_data_sentences[str]
+                erased.set_score(2*(len(prefix) -1) - (2 if i > 3 else 10 - 2*i))
+                erased_prefix.add(erased)
+    return erased_prefix
+
+
+
+def add_prefix(prefix):
+    added_prefix = set()
+
+    for i in range(len(prefix)):
+        for ch in range(ord('a'), ord('z')+1):
+            strings_to_search = data.get(prefix[:i+1] + chr(ch) + prefix[i+1:])
+            if strings_to_search:
+                for str in strings_to_search:
+                    added = list_data_sentences[str]
+                    added.set_score(2*(len(prefix) -1) - (2 if i > 3 else 10 - 2*i))
+                    added_prefix.add(added)
+    return add_prefix
+
+def complete_prefix(prefix):
+    completed_prefix = set()
+    # completed_prefix = change_prefix(prefix)
+    completed_prefix.update(erase_prefix(prefix))
+    # completed_prefix += add_prefix(prefix)
+    return completed_prefix
 
 
 
@@ -95,14 +102,15 @@ def get_best_k_completions(prefix):
 
     k = 5
     found_completions = []
-    found_completions = [list_data_sentences[item] for item in data.get(prefix)]
+    found_completions = {list_data_sentences[item] for item in data.get(prefix)}
 
-    if(len(found_completions) < k):
-        found_completions += complete_prefix(prefix)
+    if len(found_completions) < k:
+        # found_completions.update(complete_prefix(prefix))
+        complete_prefix(prefix)
 
-    found_completions = sorted(found_completions, key=lambda x: (x.get_score(), x.get_completed_sentence()))
+    found_completions = sorted(found_completions, key=lambda x: (x.get_score()), reverse=True)
     return found_completions[:k]
-
+# x.get_completed_sentence()
 
 # def menu():
 #     print("Loading the file and prepraring the system...")
@@ -133,6 +141,6 @@ read_data("about.txt")
 #     print(item.get_completed_sentence())
 
 
-b = get_best_k_completions("ou")
+b = get_best_k_completions("on")
 for complete in b:
     print(f"sentence: {complete.get_completed_sentence()} offset: {complete.get_offset()} score:  {complete.get_score()}")
