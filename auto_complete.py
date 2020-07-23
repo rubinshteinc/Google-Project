@@ -1,10 +1,10 @@
 from collections import defaultdict
 from copy import deepcopy
 import time
+import os
 
 data = defaultdict(set)
 list_data_sentences = []
-
 class AutoCompleteData:
     def __init__(self, completed_sentence, source_text, offset, score):
         self.completed_sentence = completed_sentence
@@ -46,7 +46,7 @@ class AutoComplete:
             self.found_completions[obj.get_completed_sentence()] = obj
 
     def sort(self):
-        {k: v for k, v in sorted(self.found_completions.items(), key=lambda item: item[1].get_score(), reverse=True)}
+        self.found_completions = {k: v for k, v in sorted(self.found_completions.items(), key=lambda item: item[1].get_score(), reverse=True)}
 
 
     def change_prefix(self):
@@ -98,21 +98,27 @@ def prefix_ignore_casing(prefix):
     prefix = " ".join(prefix.split())
     return "".join(filter(lambda x: x.isalnum() or x.isspace(), prefix)).lower()
 
-def initilized_data(filename):
+def initilized_data():
     id_sentence = 0
-    data_file = open(filename, encoding="utf8")
-    data_sentences = data_file.read().split("\n")
-    offset = 0
-    for sentence in data_sentences:
+
     
-        if sentence:
-            for i in range(len(sentence)):     
-                for j in range(i + 1, len(sentence) + 1):        
-                    data[prefix_ignore_casing(sentence[i: j])].add(id_sentence) 
-            new_data = AutoCompleteData(sentence, filename, offset, 0)
-            list_data_sentences.append(new_data)
-            id_sentence += 1
-        offset += 1
+    path = "python-3.8.4-docs-text/python-3.8.4-docs-text/library"
+    for root, dirs, files in os.walk(path, topdown=True):
+        for file in files:
+            data_file = open(root + '/' + file, encoding="utf8")
+            data_sentences = data_file.read().split("\n")
+            offset = 1    
+            for sentence in data_sentences:
+                
+                if sentence:
+                    for i in range(len(sentence)):     
+                        for j in range(i + 1, len(sentence) + 1):        
+                            data[prefix_ignore_casing(sentence[i: j])].add(id_sentence) 
+                    new_data = AutoCompleteData(sentence, file, offset, 0)
+                    list_data_sentences.append(new_data)
+                    id_sentence += 1
+                offset += 1
+    print(len(data))
 
 
 def get_best_k_completions(prefix):
@@ -134,7 +140,7 @@ def get_best_k_completions(prefix):
 def menu():
 
     print("Loading the file and prepraring the system...")
-    initilized_data("about.txt")
+    initilized_data()
     print("The system is ready. Enter your text:")
 
     prefix = input()
